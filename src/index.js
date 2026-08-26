@@ -237,6 +237,11 @@ export async function apply(ctx) {
           return
         }
 
+        if (url.pathname === '/api/health') {
+          sendJson({ ok: true })
+          return
+        }
+
         if (url.pathname === '/api/flows') {
           const flows = authorization.list().map(f => ({ key: f.key, methods: f.methods.map(m => m.id) }))
           sendJson(flows)
