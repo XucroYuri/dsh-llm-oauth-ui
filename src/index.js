@@ -148,6 +148,7 @@ export async function apply(ctx) {
       const host = hostIdx >= 0 && args[hostIdx+1] ? args[hostIdx+1] : '127.0.0.1'
       const tokenIdx = args.indexOf('--token')
       const authToken = tokenIdx >= 0 && args[tokenIdx+1] ? args[tokenIdx+1] : ''
+      const MAX_BODY_SIZE = 10 * 1024 * 1024
       const authorization = ctx.get('authorization')
       const credentials = ctx.get('credentials')
       if (!authorization || !credentials) {
@@ -213,7 +214,13 @@ export async function apply(ctx) {
 
         if (req.method === 'POST' && url.pathname === '/api/login') {
           let body = ''
-          for await (const chunk of req) body += chunk
+          for await (const chunk of req) {
+            body += chunk
+            if (body.length > MAX_BODY_SIZE) {
+              sendJson({ error: 'payload too large' }, 413)
+              return
+            }
+          }
           let payload = {}
           try { payload = JSON.parse(body || '{}') } catch {}
           const key = payload.key
@@ -228,7 +235,13 @@ export async function apply(ctx) {
           const session = loginSessions.get(id)
           if (!session || !session.pendingPrompt) { sendJson({ error: 'no pending prompt' }, 400); return }
           let body = ''
-          for await (const chunk of req) body += chunk
+          for await (const chunk of req) {
+            body += chunk
+            if (body.length > MAX_BODY_SIZE) {
+              sendJson({ error: 'payload too large' }, 413)
+              return
+            }
+          }
           let payload = {}
           try { payload = JSON.parse(body || '{}') } catch {}
           const prompt = session.pendingPrompt
