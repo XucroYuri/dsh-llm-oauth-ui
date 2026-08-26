@@ -85,6 +85,13 @@ npm run pack:check
 | `--port` | `4098` | Web dashboard port |
 | `--token` | empty | Bearer token for API auth |
 
+## Roadmap
+
+- Publish to npm
+- Integrate with DSH main Web UI
+- Full tool-call protocol support
+- More provider discovery sources
+
 ## License
 
 MIT

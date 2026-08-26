@@ -92,3 +92,11 @@ npm run pack:check
 | `--host` | `127.0.0.1` | 绑定地址 |
 | `--port` | `4098` | Web 仪表盘端口 |
 | `--token` | 空 | API Bearer Token |
+
+
+## 路线图
+
+- 发布到 npm
+- 集成 DSH 主 Web UI
+- 完整 tool-call 协议支持
+- 更多模型发现来源
