@@ -1,5 +1,6 @@
 // Native DSH Cordis plugin for OAuth status and interactive CLI login.
 import { createServer } from 'node:http'
+import { readFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 
@@ -30,6 +31,13 @@ async function promptUser(prompt) {
 
 export async function apply(ctx) {
   const args = ctx.get('cmdlineArgs')?.get() ?? []
+  if ((args[0] === 'oauth' || args[0] === 'llm-oauth-ui') && (args.includes('--version') || args.includes('-v'))) {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+    console.log(pkg.version)
+    const exit = ctx.get('appExit')
+    if (exit) exit(0)
+    return
+  }
   if (args[0] !== 'oauth' && args[0] !== 'llm-oauth-ui') return
 
   const exit = ctx.get('appExit')
