@@ -1,12 +1,52 @@
 # dsh-llm-oauth-ui
 
-DSH plugin: llm-oauth-ui.
+OAuth login status and future Web UI support for DeepSeek Harness.
 
-## Status
+> Status: Stable
 
-- Spec: [specs/PRD.md](specs/PRD.md)
-- Source: [src](src)
-- Tests: [tests](tests)
+## Features
+
+- Show OAuth provider login status
+- Read DSH credential records
+- Native Cordis command plugin
+- Prepared for interactive Web UI
+
+## Requirements
+
+- DeepSeek Harness (DSH) 0.1.1+
+- OpenCode CLI (optional, for sync/catalog/bridge features)
+- Node.js 22+
+- Python 3.12+ (only for fallback CLI tests)
+
+## Installation
+
+Add the plugin to your DSH profile:
+
+```bash
+cd ~/.dsh/profiles/tools
+npm install @xucroyuri/dsh-llm-oauth-ui
+```
+
+Then add to `cordis.patch.yml`:
+
+```yaml
+- insert:
+    - id: llm-oauth-ui
+      name: '@xucroyuri/dsh-llm-oauth-ui'
+```
+
+## Usage
+
+```bash
+dsh --profile tools oauth status
+```
+
+## Development
+
+```bash
+node --check src/index.js
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
+```
 
 ## License
 

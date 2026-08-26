@@ -1,7 +1,7 @@
 {
   "name": "@xucroyuri/dsh-llm-oauth-ui",
   "version": "0.1.1",
-  "description": "OAuth login status and future Web UI support for DSH",
+  "description": "OAuth login status and future Web UI support for DeepSeek Harness.",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -13,5 +13,22 @@
     "README.md",
     "LICENSE"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "oauth",
+    "login",
+    "llm",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/XucroYuri/dsh-llm-oauth-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/XucroYuri/dsh-llm-oauth-ui/issues"
+  },
+  "homepage": "https://github.com/XucroYuri/dsh-llm-oauth-ui#readme",
+  "author": "XucroYuri"
 }
