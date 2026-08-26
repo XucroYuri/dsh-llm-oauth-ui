@@ -304,6 +304,24 @@ export async function apply(ctx) {
           return
         }
 
+        if (req.method === 'POST' && url.pathname === '/api/cancel') {
+          let body = ''
+          for await (const chunk of req) {
+            body += chunk
+            if (body.length > MAX_BODY_SIZE) {
+              sendJson({ error: 'payload too large' }, 413)
+              return
+            }
+          }
+          let payload = {}
+          try { payload = JSON.parse(body || '{}') } catch {}
+          const key = payload.key
+          if (!key) { sendJson({ error: 'key is required' }, 400); return }
+          authorization.cancel(key)
+          sendJson({ ok: true })
+          return
+        }
+
         if (url.pathname === '/api/flows') {
           const flows = authorization.list().map(f => ({ key: f.key, methods: f.methods.map(m => m.id) }))
           sendJson(flows)
