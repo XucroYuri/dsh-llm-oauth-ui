@@ -36,6 +36,7 @@ export async function apply(ctx) {
 
   try {
     const command = args[1] || 'status'
+    const json = args.includes('--json')
 
     if (command === 'list') {
       const authorization = ctx.get('authorization')
@@ -45,7 +46,9 @@ export async function apply(ctx) {
       }
       await new Promise(r => setTimeout(r, 200))
       const flows = authorization.list()
-      if (flows.length === 0) {
+      if (json) {
+        console.log(JSON.stringify(flows.map(f => ({ key: f.key, methods: f.methods.map(m => m.id) })), null, 2))
+      } else if (flows.length === 0) {
         console.log('No authorization flows available.')
       } else {
         for (const flow of flows) {
@@ -63,15 +66,21 @@ export async function apply(ctx) {
       for (const r of records) {
         if (r.key && r.key.startsWith('llm-pi-ai/')) byId.set(r.key.slice('llm-pi-ai/'.length), r.kind || 'unknown')
       }
-      console.log('OAuth provider login status:')
-      for (const provider of KNOWN) {
-        const kind = byId.get(provider)
-        if (kind) console.log(`  ${provider}: configured (${kind})`)
-        else console.log(`  ${provider}: not configured`)
-      }
-      if (byId.size === 0) {
-        console.log('\nNo OAuth grants found yet.')
-        console.log('Try: dsh --profile tools oauth login openai')
+      if (json) {
+        const obj = {}
+        for (const provider of KNOWN) obj[provider] = byId.get(provider) || null
+        console.log(JSON.stringify(obj, null, 2))
+      } else {
+        console.log('OAuth provider login status:')
+        for (const provider of KNOWN) {
+          const kind = byId.get(provider)
+          if (kind) console.log(`  ${provider}: configured (${kind})`)
+          else console.log(`  ${provider}: not configured`)
+        }
+        if (byId.size === 0) {
+          console.log('\nNo OAuth grants found yet.')
+          console.log('Try: dsh --profile tools oauth login openai')
+        }
       }
       finish(0); return
     }
