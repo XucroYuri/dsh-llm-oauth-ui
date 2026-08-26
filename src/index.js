@@ -144,6 +144,8 @@ export async function apply(ctx) {
     if (command === 'serve') {
       const portIdx = args.indexOf('--port')
       const port = portIdx >= 0 && args[portIdx+1] ? Number(args[portIdx+1]) : 4098
+      const hostIdx = args.indexOf('--host')
+      const host = hostIdx >= 0 && args[hostIdx+1] ? args[hostIdx+1] : '127.0.0.1'
       const authorization = ctx.get('authorization')
       const credentials = ctx.get('credentials')
       if (!authorization || !credentials) {
@@ -352,7 +354,7 @@ load();
 
         sendJson({ error: 'not found' }, 404)
       })
-      server.listen(port, '127.0.0.1', () => {
+      server.listen(port, host, () => {
         console.log(`oauth web ui listening on http://127.0.0.1:${port}`)
       })
       // Keep the process alive as a long-running server.
