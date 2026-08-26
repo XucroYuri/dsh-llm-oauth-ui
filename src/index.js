@@ -68,6 +68,8 @@ export async function apply(ctx) {
         console.error('authorization service is not mounted in this profile')
         finish(1); return
       }
+      // Let late-binding authorization flow registrations settle.
+      await new Promise(r => setTimeout(r, 200))
       const key = `llm-pi-ai/${provider}`
       const entry = authorization.describe(key)
       if (!entry) {
