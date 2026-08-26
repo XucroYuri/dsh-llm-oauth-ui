@@ -269,7 +269,9 @@ export async function apply(ctx) {
 <p>Key: <input id="key" placeholder="llm-pi-ai/openai-codex" size="40"></p>
 <p>Method: <input id="method" placeholder="oauth" size="20"></p>
 <button onclick="startLogin()">Start Login</button>
+<h2>Login Session</h2>
 <pre id="login">...</pre>
+<div id="promptArea"></div>
 <script>
 async function load(){
   const s = await fetch('/api/status').then(r=>r.json());
@@ -277,24 +279,55 @@ async function load(){
   const f = await fetch('/api/flows').then(r=>r.json());
   document.getElementById('flows').textContent = JSON.stringify(f, null, 2);
 }
+let currentId = null;
 async function startLogin(){
   const key = document.getElementById('key').value;
   const method = document.getElementById('method').value || undefined;
   const res = await fetch('/api/login', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({key, method})}).then(r=>r.json());
-  const id = res.id;
-  const out = document.getElementById('login');
-  const tick = async () => {
-    const state = await fetch('/api/login/' + id).then(r=>r.json());
-    out.textContent = JSON.stringify(state, null, 2);
-    if (state.pendingPrompt) {
-      const answer = prompt(state.pendingPrompt.message || 'Answer:');
-      if (answer !== null) {
-        await fetch('/api/prompt/' + id, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({answer})});
-      }
-    }
-    if (state.status === 'running') setTimeout(tick, 1000);
-  };
+  currentId = res.id;
   tick();
+}
+async function tick(){
+  if (!currentId) return;
+  const state = await fetch('/api/login/' + currentId).then(r=>r.json());
+  document.getElementById('login').textContent = JSON.stringify(state, null, 2);
+  const area = document.getElementById('promptArea');
+  area.innerHTML = '';
+  if (state.pendingPrompt) {
+    const p = state.pendingPrompt;
+    const label = document.createElement('div');
+    label.textContent = p.message || 'Answer:';
+    area.appendChild(label);
+    if (p.kind === 'select' && p.options) {
+      const sel = document.createElement('select');
+      p.options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.id;
+        o.textContent = opt.label;
+        sel.appendChild(o);
+      });
+      area.appendChild(sel);
+      const btn = document.createElement('button');
+      btn.textContent = 'Submit';
+      btn.onclick = async () => {
+        await fetch('/api/prompt/' + currentId, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({answer: sel.value})});
+        tick();
+      };
+      area.appendChild(btn);
+    } else {
+      const input = document.createElement('input');
+      input.placeholder = p.placeholder || '';
+      area.appendChild(input);
+      const btn = document.createElement('button');
+      btn.textContent = 'Submit';
+      btn.onclick = async () => {
+        await fetch('/api/prompt/' + currentId, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({answer: input.value})});
+        tick();
+      };
+      area.appendChild(btn);
+    }
+  }
+  if (state.status === 'running') setTimeout(tick, 1000);
 }
 load();
 </script>
