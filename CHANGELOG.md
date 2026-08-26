@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- Smoke test version check
+
 - Native Cordis plugin
 - CLI OAuth login/logout
 - Authorization flow timing fix
