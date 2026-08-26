@@ -81,3 +81,12 @@ npm test
 npm run smoke
 npm run pack:check
 ```
+
+
+## 配置
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--host` | `127.0.0.1` | 绑定地址 |
+| `--port` | `4098` | Web 仪表盘端口 |
+| `--token` | 空 | API Bearer Token |

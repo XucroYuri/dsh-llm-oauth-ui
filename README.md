@@ -75,6 +75,14 @@ npm run smoke
 npm run pack:check
 ```
 
+## Configuration
+
+| Option | Default | Description |
+|---|---|---|
+| `--host` | `127.0.0.1` | Bind address |
+| `--port` | `4098` | Web dashboard port |
+| `--token` | empty | Bearer token for API auth |
+
 ## License
 
 MIT
