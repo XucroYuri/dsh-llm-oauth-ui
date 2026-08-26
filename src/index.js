@@ -146,6 +146,8 @@ export async function apply(ctx) {
       const port = portIdx >= 0 && args[portIdx+1] ? Number(args[portIdx+1]) : 4098
       const hostIdx = args.indexOf('--host')
       const host = hostIdx >= 0 && args[hostIdx+1] ? args[hostIdx+1] : '127.0.0.1'
+      const tokenIdx = args.indexOf('--token')
+      const authToken = tokenIdx >= 0 && args[tokenIdx+1] ? args[tokenIdx+1] : ''
       const authorization = ctx.get('authorization')
       const credentials = ctx.get('credentials')
       if (!authorization || !credentials) {
@@ -202,6 +204,10 @@ export async function apply(ctx) {
 
         if (req.method === 'OPTIONS') {
           sendJson({ ok: true })
+          return
+        }
+        if (authToken && req.headers.authorization !== `Bearer ${authToken}`) {
+          sendJson({ error: 'unauthorized' }, 401)
           return
         }
 
