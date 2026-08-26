@@ -37,6 +37,25 @@ export async function apply(ctx) {
   try {
     const command = args[1] || 'status'
 
+    if (command === 'list') {
+      const authorization = ctx.get('authorization')
+      if (!authorization) {
+        console.error('authorization service is not mounted in this profile')
+        finish(1); return
+      }
+      await new Promise(r => setTimeout(r, 200))
+      const flows = authorization.list()
+      if (flows.length === 0) {
+        console.log('No authorization flows available.')
+      } else {
+        for (const flow of flows) {
+          const methods = flow.methods.map(m => m.id).join(', ')
+          console.log(`${flow.key}  [${methods}]`)
+        }
+      }
+      finish(0); return
+    }
+
     if (command === 'status') {
       const credentials = ctx.get('credentials')
       const records = await credentials.listRecords()
@@ -80,6 +99,10 @@ export async function apply(ctx) {
       }
       const methodIdx = args.indexOf('--method')
       const method = methodIdx >= 0 && args[methodIdx+1] ? args[methodIdx+1] : undefined
+      if (method && !entry.methods.some(m => m.id === method)) {
+        console.error(`Method ${method} is not offered. Available methods: ${entry.methods.map(m => m.id).join(', ')}`)
+        finish(2); return
+      }
       const outcome = await authorization.begin({
         key,
         ...(method ? { method } : {}),
