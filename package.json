@@ -1,6 +1,6 @@
 {
   "name": "@xucroyuri/dsh-llm-oauth-ui",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "OAuth login status and future Web UI support for DeepSeek Harness.",
   "type": "module",
   "main": "src/index.js",
