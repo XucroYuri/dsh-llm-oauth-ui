@@ -1,5 +1,7 @@
 # dsh-llm-oauth-ui
 
+![CI](https://github.com/XucroYuri/dsh-llm-oauth-ui/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/github/license/XucroYuri/dsh-llm-oauth-ui)
+
 DeepSeek Harness 的 OAuth 登录状态查询与未来 Web UI 支持。
 
 > 状态：稳定

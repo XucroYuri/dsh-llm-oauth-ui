@@ -1,5 +1,7 @@
 # dsh-llm-oauth-ui
 
+![CI](https://github.com/XucroYuri/dsh-llm-oauth-ui/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/github/license/XucroYuri/dsh-llm-oauth-ui)
+
 OAuth login status and future Web UI support for DeepSeek Harness.
 
 > Status: Stable
