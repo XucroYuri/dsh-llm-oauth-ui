@@ -189,8 +189,18 @@ export async function apply(ctx) {
       const server = createServer(async (req, res) => {
         const url = new URL(req.url, `http://127.0.0.1:${port}`)
         const sendJson = (obj, status = 200) => {
-          res.writeHead(status, { 'content-type': 'application/json' })
+          res.writeHead(status, {
+            'content-type': 'application/json',
+            'access-control-allow-origin': '*',
+            'access-control-allow-methods': 'GET,POST,OPTIONS',
+            'access-control-allow-headers': 'content-type',
+          })
           res.end(JSON.stringify(obj))
+        }
+
+        if (req.method === 'OPTIONS') {
+          sendJson({ ok: true })
+          return
         }
 
         if (req.method === 'POST' && url.pathname === '/api/login') {
