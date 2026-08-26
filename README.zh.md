@@ -27,6 +27,13 @@ DeepSeek Harness 的 OAuth 登录状态查询与未来 Web UI 支持。
 ```bash
 cd ~/.dsh/profiles/tools
 npm install @xucroyuri/dsh-llm-oauth-ui
+
+
+Or install directly from GitHub:
+
+```bash
+npm install github:XucroYuri/dsh-llm-oauth-ui
+```
 ```
 
 然后在 `cordis.patch.yml` 中添加：

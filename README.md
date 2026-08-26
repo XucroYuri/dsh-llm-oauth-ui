@@ -27,6 +27,13 @@ Add the plugin to your DSH profile:
 ```bash
 cd ~/.dsh/profiles/tools
 npm install @xucroyuri/dsh-llm-oauth-ui
+
+
+Or install directly from GitHub:
+
+```bash
+npm install github:XucroYuri/dsh-llm-oauth-ui
+```
 ```
 
 Then add to `cordis.patch.yml`:
