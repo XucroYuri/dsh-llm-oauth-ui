@@ -268,6 +268,11 @@ export async function apply(ctx) {
           return
         }
 
+        if (url.pathname === '/api/version') {
+          sendJson({ name: 'dsh-llm-oauth-ui', version: '0.3.0' })
+          return
+        }
+
         if (url.pathname === '/api/health') {
           sendJson({ ok: true })
           return
