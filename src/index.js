@@ -1,4 +1,5 @@
 // Native DSH Cordis plugin for OAuth status and interactive CLI login.
+import { createServer } from 'node:http'
 import { createInterface } from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 
@@ -138,6 +139,70 @@ export async function apply(ctx) {
       await credentials.deleteRecord(`llm-pi-ai/${provider}`)
       console.log(`Logged out ${provider}`)
       finish(0); return
+    }
+
+    if (command === 'serve') {
+      const portIdx = args.indexOf('--port')
+      const port = portIdx >= 0 && args[portIdx+1] ? Number(args[portIdx+1]) : 4098
+      const authorization = ctx.get('authorization')
+      const credentials = ctx.get('credentials')
+      if (!authorization || !credentials) {
+        console.error('oauth serve requires authorization and credentials services')
+        finish(1); return
+      }
+      await new Promise(r => setTimeout(r, 200))
+      const server = createServer(async (req, res) => {
+        const url = new URL(req.url, `http://127.0.0.1:${port}`)
+        if (url.pathname === '/api/flows') {
+          const flows = authorization.list().map(f => ({ key: f.key, methods: f.methods.map(m => m.id) }))
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(JSON.stringify(flows))
+          return
+        }
+        if (url.pathname === '/api/status') {
+          const records = await credentials.listRecords()
+          const byId = {}
+          for (const r of records) {
+            if (r.key && r.key.startsWith('llm-pi-ai/')) byId[r.key.slice('llm-pi-ai/'.length)] = r.kind || 'unknown'
+          }
+          const obj = {}
+          for (const provider of KNOWN) obj[provider] = byId[provider] || null
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(JSON.stringify(obj))
+          return
+        }
+        if (url.pathname === '/') {
+          res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+          res.end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>DSH OAuth UI</title></head>
+<body>
+<h1>DSH OAuth UI</h1>
+<p>Flows and login status. Interactive login is currently available via CLI:
+<code>dsh --profile oauth-dev oauth login &lt;provider&gt;</code></p>
+<h2>Status</h2>
+<pre id="status">Loading...</pre>
+<h2>Flows</h2>
+<pre id="flows">Loading...</pre>
+<script>
+async function load(){
+  const s = await fetch('/api/status').then(r=>r.json());
+  document.getElementById('status').textContent = JSON.stringify(s, null, 2);
+  const f = await fetch('/api/flows').then(r=>r.json());
+  document.getElementById('flows').textContent = JSON.stringify(f, null, 2);
+}
+load();
+</script>
+</body></html>`)
+          return
+        }
+        res.writeHead(404, { 'content-type': 'application/json' })
+        res.end(JSON.stringify({ error: 'not found' }))
+      })
+      server.listen(port, '127.0.0.1', () => {
+        console.log(`oauth web ui listening on http://127.0.0.1:${port}`)
+      })
+      // Keep the process alive as a long-running server.
+      return
     }
 
     console.error(`Unknown command: ${command}`)
