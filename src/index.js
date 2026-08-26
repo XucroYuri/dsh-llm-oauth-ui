@@ -151,14 +151,98 @@ export async function apply(ctx) {
         finish(1); return
       }
       await new Promise(r => setTimeout(r, 200))
+
+      const loginSessions = new Map()
+      let nextLoginId = 1
+
+      function startLogin(key, method) {
+        const id = `login-${nextLoginId++}`
+        const session = { id, key, method, notices: [], pendingPrompt: null, status: 'running', error: null }
+        loginSessions.set(id, session)
+        const run = async () => {
+          try {
+            const outcome = await authorization.begin({
+              key,
+              ...(method ? { method } : {}),
+              interaction: {
+                notify: (notice) => { session.notices.push(notice) },
+                prompt: (prompt) => new Promise((resolve, reject) => {
+                  session.pendingPrompt = { ...prompt, resolve, reject }
+                }),
+              },
+            })
+            session.status = outcome.status
+          } catch (error) {
+            session.status = 'error'
+            session.error = String(error?.message || error)
+          } finally {
+            if (session.pendingPrompt) {
+              session.pendingPrompt.reject(new Error('flow ended'))
+              session.pendingPrompt = null
+            }
+          }
+        }
+        run()
+        return id
+      }
+
       const server = createServer(async (req, res) => {
         const url = new URL(req.url, `http://127.0.0.1:${port}`)
-        if (url.pathname === '/api/flows') {
-          const flows = authorization.list().map(f => ({ key: f.key, methods: f.methods.map(m => m.id) }))
-          res.writeHead(200, { 'content-type': 'application/json' })
-          res.end(JSON.stringify(flows))
+        const sendJson = (obj, status = 200) => {
+          res.writeHead(status, { 'content-type': 'application/json' })
+          res.end(JSON.stringify(obj))
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/login') {
+          let body = ''
+          for await (const chunk of req) body += chunk
+          let payload = {}
+          try { payload = JSON.parse(body || '{}') } catch {}
+          const key = payload.key
+          if (!key) { sendJson({ error: 'key is required' }, 400); return }
+          const id = startLogin(key, payload.method)
+          sendJson({ id })
           return
         }
+
+        if (req.method === 'POST' && url.pathname.startsWith('/api/prompt/')) {
+          const id = decodeURIComponent(url.pathname.slice('/api/prompt/'.length))
+          const session = loginSessions.get(id)
+          if (!session || !session.pendingPrompt) { sendJson({ error: 'no pending prompt' }, 400); return }
+          let body = ''
+          for await (const chunk of req) body += chunk
+          let payload = {}
+          try { payload = JSON.parse(body || '{}') } catch {}
+          const prompt = session.pendingPrompt
+          session.pendingPrompt = null
+          prompt.resolve(payload.answer)
+          sendJson({ ok: true })
+          return
+        }
+
+        if (req.method === 'GET' && url.pathname.startsWith('/api/login/')) {
+          const id = decodeURIComponent(url.pathname.slice('/api/login/'.length))
+          const session = loginSessions.get(id)
+          if (!session) { sendJson({ error: 'not found' }, 404); return }
+          const { resolve, reject, ...promptView } = session.pendingPrompt || {}
+          sendJson({
+            id: session.id,
+            key: session.key,
+            method: session.method,
+            status: session.status,
+            error: session.error,
+            notices: session.notices,
+            pendingPrompt: session.pendingPrompt ? promptView : null,
+          })
+          return
+        }
+
+        if (url.pathname === '/api/flows') {
+          const flows = authorization.list().map(f => ({ key: f.key, methods: f.methods.map(m => m.id) }))
+          sendJson(flows)
+          return
+        }
+
         if (url.pathname === '/api/status') {
           const records = await credentials.listRecords()
           const byId = {}
@@ -167,22 +251,25 @@ export async function apply(ctx) {
           }
           const obj = {}
           for (const provider of KNOWN) obj[provider] = byId[provider] || null
-          res.writeHead(200, { 'content-type': 'application/json' })
-          res.end(JSON.stringify(obj))
+          sendJson(obj)
           return
         }
+
         if (url.pathname === '/') {
           res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
           res.end(`<!doctype html>
 <html><head><meta charset="utf-8"><title>DSH OAuth UI</title></head>
 <body>
 <h1>DSH OAuth UI</h1>
-<p>Flows and login status. Interactive login is currently available via CLI:
-<code>dsh --profile oauth-dev oauth login &lt;provider&gt;</code></p>
 <h2>Status</h2>
 <pre id="status">Loading...</pre>
 <h2>Flows</h2>
 <pre id="flows">Loading...</pre>
+<h2>Start Login</h2>
+<p>Key: <input id="key" placeholder="llm-pi-ai/openai-codex" size="40"></p>
+<p>Method: <input id="method" placeholder="oauth" size="20"></p>
+<button onclick="startLogin()">Start Login</button>
+<pre id="login">...</pre>
 <script>
 async function load(){
   const s = await fetch('/api/status').then(r=>r.json());
@@ -190,13 +277,32 @@ async function load(){
   const f = await fetch('/api/flows').then(r=>r.json());
   document.getElementById('flows').textContent = JSON.stringify(f, null, 2);
 }
+async function startLogin(){
+  const key = document.getElementById('key').value;
+  const method = document.getElementById('method').value || undefined;
+  const res = await fetch('/api/login', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({key, method})}).then(r=>r.json());
+  const id = res.id;
+  const out = document.getElementById('login');
+  const tick = async () => {
+    const state = await fetch('/api/login/' + id).then(r=>r.json());
+    out.textContent = JSON.stringify(state, null, 2);
+    if (state.pendingPrompt) {
+      const answer = prompt(state.pendingPrompt.message || 'Answer:');
+      if (answer !== null) {
+        await fetch('/api/prompt/' + id, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({answer})});
+      }
+    }
+    if (state.status === 'running') setTimeout(tick, 1000);
+  };
+  tick();
+}
 load();
 </script>
 </body></html>`)
           return
         }
-        res.writeHead(404, { 'content-type': 'application/json' })
-        res.end(JSON.stringify({ error: 'not found' }))
+
+        sendJson({ error: 'not found' }, 404)
       })
       server.listen(port, '127.0.0.1', () => {
         console.log(`oauth web ui listening on http://127.0.0.1:${port}`)
