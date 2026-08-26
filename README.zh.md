@@ -39,6 +39,8 @@ npm install @xucroyuri/dsh-llm-oauth-ui
 
 ```bash
 dsh --profile tools oauth status
+dsh --profile tools oauth login openai-codex
+dsh --profile tools oauth logout openai-codex
 ```
 
 ## 开发
