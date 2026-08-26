@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Health endpoint
 - Version endpoint
 - Logout API
+- Cancel login API
 - JSON output
 - --version flag
 ## [0.2.0] - 2026-08-26
