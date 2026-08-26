@@ -36,5 +36,8 @@
   },
   "bin": {
     "dsh-llm-oauth-ui": "bin/dsh-llm-oauth-ui.js"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
