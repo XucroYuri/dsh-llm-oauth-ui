@@ -1,6 +1,6 @@
 {
   "name": "@xucroyuri/dsh-llm-oauth-ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OAuth login status and future Web UI support for DSH",
   "type": "module",
   "main": "src/index.js",
