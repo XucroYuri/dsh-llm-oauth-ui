@@ -107,6 +107,18 @@ See [examples/](examples/) for runnable demos.
 
 If you find this project useful, consider [sponsoring](https://github.com/sponsors/XucroYuri).
 
+## API
+
+- `GET /api/version`
+- `GET /api/health`
+- `GET /api/flows`
+- `GET /api/status`
+- `POST /api/login`
+- `GET /api/login/:id`
+- `POST /api/prompt/:id`
+- `POST /api/logout`
+- `POST /api/cancel`
+
 ## License
 
 MIT

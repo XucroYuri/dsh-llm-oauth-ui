@@ -117,3 +117,16 @@ npm run pack:check
 ## 支持
 
 如果你觉得这个项目有用，欢迎 [赞助](https://github.com/sponsors/XucroYuri)。
+
+
+## API
+
+- `GET /api/version`
+- `GET /api/health`
+- `GET /api/flows`
+- `GET /api/status`
+- `POST /api/login`
+- `GET /api/login/:id`
+- `POST /api/prompt/:id`
+- `POST /api/logout`
+- `POST /api/cancel`
